@@ -10,12 +10,12 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 const registerSchema = z.object({
-  displayName: z.string().min(2, 'Display name must be at least 2 characters').optional(),
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  displayName: z.string().min(2, '昵称至少需要2个字符').optional(),
+  email: z.string().email('请输入有效的邮箱地址'),
+  password: z.string().min(6, '密码至少需要6个字符'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: '两次输入的密码不一致',
   path: ['confirmPassword'],
 })
 
@@ -42,7 +42,22 @@ export function RegisterPage() {
     // Check if email confirmation is required
     if (result.success && result.error?.includes('email')) {
       setEmailSent(true)
+    } else if (result.success && !result.error) {
+      // 如果直接成功（无需邮箱验证），也显示确认页面
+      setEmailSent(true)
     }
+  }
+
+  // 翻译常见的 Supabase 错误信息
+  const translateError = (err: string) => {
+    const errorMap: Record<string, string> = {
+      'User already registered': '该邮箱已被注册',
+      'Password should be at least 6 characters': '密码至少需要6个字符',
+      'Unable to validate email address: invalid format': '邮箱格式无效',
+      'Signup requires a valid password': '请输入有效的密码',
+      'Too many requests': '请求过于频繁，请稍后再试',
+    }
+    return errorMap[err] || err
   }
 
   if (emailSent) {
@@ -53,16 +68,16 @@ export function RegisterPage() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
-            <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
+            <CardTitle className="text-2xl font-bold">注册成功</CardTitle>
             <CardDescription>
-              We've sent you a confirmation link to verify your email address.
-              Please check your inbox and click the link to complete registration.
+              我们已向您的邮箱发送了一封确认邮件。
+              请查收邮件并点击确认链接完成注册。
             </CardDescription>
           </CardHeader>
           <CardFooter className="flex flex-col gap-4">
             <Link to="/login" className="w-full">
               <Button variant="outline" className="w-full">
-                Back to Sign In
+                返回登录
               </Button>
             </Link>
           </CardFooter>
@@ -75,27 +90,27 @@ export function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
+          <CardTitle className="text-2xl font-bold">创建账户</CardTitle>
           <CardDescription>
-            Start managing your wealth with Wealth Manager
+            开始使用财富管理助手
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             {error && (
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
+                {translateError(error)}
               </div>
             )}
 
             <div className="space-y-2">
               <label htmlFor="displayName" className="text-sm font-medium">
-                Display Name <span className="text-muted-foreground">(optional)</span>
+                昵称 <span className="text-muted-foreground">（选填）</span>
               </label>
               <Input
                 id="displayName"
                 type="text"
-                placeholder="Your name"
+                placeholder="请输入昵称"
                 autoComplete="name"
                 disabled={isLoading}
                 {...register('displayName')}
@@ -107,12 +122,12 @@ export function RegisterPage() {
 
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
-                Email
+                邮箱
               </label>
               <Input
                 id="email"
                 type="email"
-                placeholder="your@email.com"
+                placeholder="请输入邮箱"
                 autoComplete="email"
                 disabled={isLoading}
                 {...register('email')}
@@ -124,13 +139,13 @@ export function RegisterPage() {
 
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
-                Password
+                密码
               </label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Create a password"
+                  placeholder="请输入密码（至少6位）"
                   autoComplete="new-password"
                   disabled={isLoading}
                   {...register('password')}
@@ -150,13 +165,13 @@ export function RegisterPage() {
 
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirm Password
+                确认密码
               </label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Confirm your password"
+                  placeholder="请再次输入密码"
                   autoComplete="new-password"
                   disabled={isLoading}
                   {...register('confirmPassword')}
@@ -180,17 +195,17 @@ export function RegisterPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
+                  注册中...
                 </>
               ) : (
-                'Create Account'
+                '注册'
               )}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{' '}
+              已有账户？{' '}
               <Link to="/login" className="text-primary hover:underline">
-                Sign in
+                立即登录
               </Link>
             </p>
           </CardFooter>

@@ -10,8 +10,8 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('请输入有效的邮箱地址'),
+  password: z.string().min(6, '密码至少需要6个字符'),
 })
 
 type LoginForm = z.infer<typeof loginSchema>
@@ -35,37 +35,49 @@ export function LoginPage() {
     await signIn(data.email, data.password)
   }
 
+  // 翻译常见的 Supabase 错误信息
+  const translateError = (err: string) => {
+    const errorMap: Record<string, string> = {
+      'Invalid login credentials': '邮箱或密码错误',
+      'Email not confirmed': '邮箱尚未验证，请检查收件箱并点击确认链接',
+      'User not found': '用户不存在',
+      'Invalid email or password': '邮箱或密码错误',
+      'Too many requests': '请求过于频繁，请稍后再试',
+    }
+    return errorMap[err] || err
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl font-bold">欢迎回来</CardTitle>
           <CardDescription>
-            Sign in to your Wealth Manager account
+            登录您的财富管理账户
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             {from && (
               <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
-                Please sign in to access this page
+                请登录后访问该页面
               </div>
             )}
 
             {error && (
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
+                {translateError(error)}
               </div>
             )}
 
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
-                Email
+                邮箱
               </label>
               <Input
                 id="email"
                 type="email"
-                placeholder="your@email.com"
+                placeholder="请输入邮箱"
                 autoComplete="email"
                 disabled={isLoading}
                 {...register('email')}
@@ -77,13 +89,13 @@ export function LoginPage() {
 
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
-                Password
+                密码
               </label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
+                  placeholder="请输入密码"
                   autoComplete="current-password"
                   disabled={isLoading}
                   {...register('password')}
@@ -106,7 +118,7 @@ export function LoginPage() {
                 to="/forgot-password"
                 className="text-sm text-primary hover:underline"
               >
-                Forgot password?
+                忘记密码？
               </Link>
             </div>
           </CardContent>
@@ -116,17 +128,17 @@ export function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  登录中...
                 </>
               ) : (
-                'Sign In'
+                '登录'
               )}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Don't have an account?{' '}
+              还没有账户？{' '}
               <Link to="/register" className="text-primary hover:underline">
-                Create account
+                立即注册
               </Link>
             </p>
           </CardFooter>
