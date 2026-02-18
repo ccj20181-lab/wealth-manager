@@ -108,7 +108,7 @@ export function TransactionList({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">交易记录</CardTitle>
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex gap-1 bg-muted rounded-lg p-1">
             {FILTER_OPTIONS.map((option) => (
               <button
                 key={option.value}
@@ -116,8 +116,8 @@ export function TransactionList({
                 className={cn(
                   'px-3 py-1 text-sm rounded-md transition-colors',
                   filter === option.value
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 {option.label}

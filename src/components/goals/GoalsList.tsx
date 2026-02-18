@@ -7,6 +7,7 @@ import { Target, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GoalCard } from './GoalCard';
+import { formatCurrency } from '@/components/charts';
 import type { GoalProgress } from '@/types/database';
 
 interface GoalsListProps {
@@ -18,15 +19,6 @@ interface GoalsListProps {
   onComplete?: (id: string) => void;
   onUpdateProgress?: (id: string) => void;
   isUpdating?: boolean;
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 export function GoalsList({

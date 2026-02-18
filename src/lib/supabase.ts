@@ -1,6 +1,6 @@
 /**
  * Wealth Manager - Supabase Client
- * 无需登录版本 - 使用固定用户ID
+ * Supabase 客户端与认证辅助方法
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -15,25 +15,29 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: false,
-    persistSession: false,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
   },
 });
 
-// 固定用户ID - 个人使用，无需登录
-const FIXED_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-// Helper to get current user ID - 返回固定ID
+// Helper to get current user ID
 export const getCurrentUserId = async (): Promise<string | null> => {
-  return FIXED_USER_ID;
+  const { data, error } = await supabase.auth.getUser();
+  if (error) {
+    // 在未登录或会话失效场景下，Supabase 可能返回错误；统一按未登录处理
+    return null;
+  }
+  return data.user?.id ?? null;
 };
 
-// Helper to require authenticated user - 直接返回固定ID
+// Helper to require authenticated user
 export const requireAuth = async (): Promise<string> => {
-  return FIXED_USER_ID;
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    throw new Error('Not authenticated');
+  }
+  return userId;
 };
-
-// 导出固定用户ID供其他模块使用
-export const OWNER_USER_ID = FIXED_USER_ID;
 
 export default supabase;

@@ -7,6 +7,7 @@ import { Target, Calendar, TrendingUp, Edit, Trash2, CheckCircle } from 'lucide-
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GoalProgressRing } from './GoalProgressRing';
+import { formatCurrency } from '@/components/charts';
 import type { GoalProgress } from '@/types/database';
 
 interface GoalCardProps {
@@ -16,15 +17,6 @@ interface GoalCardProps {
   onComplete?: (id: string) => void;
   onUpdateProgress?: (id: string) => void;
   isUpdating?: boolean;
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 function getProgressColor(progress: number): 'default' | 'success' | 'warning' | 'danger' {

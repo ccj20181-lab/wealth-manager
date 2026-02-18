@@ -1,80 +1,12 @@
 /**
- * Wealth Manager - Auth API Service
- * Authentication related API functions
+ * Wealth Manager - User Profile API Service
+ * 本项目已移除注册/登录/找回密码等显式认证流程，仅保留“当前会话用户”的资料读写。
  */
 
 import { supabase } from '@/lib/supabase';
 import type { UserProfile, UserProfileUpdate } from '@/types/database';
 
-export interface SignUpParams {
-  email: string;
-  password: string;
-  displayName?: string;
-}
-
-export interface SignInParams {
-  email: string;
-  password: string;
-}
-
 export const authApi = {
-  /**
-   * Sign up with email and password
-   */
-  async signUp({ email, password, displayName }: SignUpParams) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: displayName,
-        },
-      },
-    });
-
-    if (error) throw error;
-    return data;
-  },
-
-  /**
-   * Sign in with email and password
-   */
-  async signIn({ email, password }: SignInParams) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-    return data;
-  },
-
-  /**
-   * Sign out current user
-   */
-  async signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  },
-
-  /**
-   * Get current session
-   */
-  async getSession() {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    return data.session;
-  },
-
-  /**
-   * Get current user
-   */
-  async getUser() {
-    const { data, error } = await supabase.auth.getUser();
-    if (error) throw error;
-    return data.user;
-  },
-
   /**
    * Get user profile
    */
@@ -89,6 +21,18 @@ export const authApi = {
       .single();
 
     if (error && error.code !== 'PGRST116') throw error;
+
+    // 新用户首次登录：profile 可能不存在，直接创建一条默认记录
+    if (!data) {
+      const { data: inserted, error: insertError } = await supabase
+        .from('user_profiles')
+        .insert({ id: user.id, currency: 'CNY' } as never)
+        .select('*')
+        .single();
+      if (insertError) throw insertError;
+      return inserted as UserProfile;
+    }
+
     return data;
   },
 
@@ -99,44 +43,15 @@ export const authApi = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
+    // upsert: 兼容 profile 尚未创建的情况
     const { data, error } = await supabase
       .from('user_profiles')
-      .update(updates as never)
-      .eq('id', user.id)
+      .upsert({ id: user.id, ...updates } as never, { onConflict: 'id' })
       .select()
       .single();
 
     if (error) throw error;
     return data as UserProfile;
-  },
-
-  /**
-   * Reset password
-   */
-  async resetPassword(email: string) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    if (error) throw error;
-  },
-
-  /**
-   * Update password
-   */
-  async updatePassword(newPassword: string) {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
-
-    if (error) throw error;
-  },
-
-  /**
-   * Subscribe to auth state changes
-   */
-  onAuthStateChange(callback: (event: string, session: unknown) => void) {
-    return supabase.auth.onAuthStateChange(callback);
   },
 };
 

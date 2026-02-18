@@ -8,6 +8,7 @@ import { Loader2, X, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrency } from '@/components/charts';
 import type { GoalProgress } from '@/types/database';
 
 interface UpdateProgressDialogProps {
@@ -16,15 +17,6 @@ interface UpdateProgressDialogProps {
   onSubmit: (id: string, currentAmount: number) => Promise<void>;
   isSubmitting?: boolean;
   goal: GoalProgress | null;
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 export function UpdateProgressDialog({

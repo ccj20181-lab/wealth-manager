@@ -5,17 +5,21 @@
 
 // Auth
 export {
+  AuthProvider,
   useAuth,
   useProfile,
-  useSignUp,
-  useSignIn,
-  useSignOut,
   useUpdateProfile,
-  useResetPassword,
-  useUpdatePassword,
-  useRequireAuth,
   authKeys,
 } from './useAuth';
+
+// Accounts
+export {
+  useAccounts,
+  useCreateAccount,
+  useUpdateAccount,
+  useDeleteAccount,
+  accountsKeys,
+} from './useAccounts';
 
 // Funds
 export {

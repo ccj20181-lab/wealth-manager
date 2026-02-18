@@ -9,3 +9,4 @@ export { TransactionForm } from './TransactionForm';
 export { CategorySelector } from './CategorySelector';
 export { MonthlyStats } from './MonthlyStats';
 export { BudgetCard } from './BudgetCard';
+export { BudgetManagerDialog } from './BudgetManagerDialog';

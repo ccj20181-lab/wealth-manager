@@ -33,10 +33,10 @@ interface QuickActionsCardProps {
 }
 
 const variantStyles = {
-  default: 'bg-gray-100 text-gray-600 hover:bg-gray-200',
-  income: 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200',
-  expense: 'bg-red-100 text-red-600 hover:bg-red-200',
-  primary: 'bg-blue-100 text-blue-600 hover:bg-blue-200',
+  default: 'bg-muted text-muted-foreground hover:bg-muted/80',
+  income: 'bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20',
+  expense: 'bg-red-500/15 text-red-700 hover:bg-red-500/20',
+  primary: 'bg-primary/15 text-primary hover:bg-primary/20',
 };
 
 export function QuickActionsCard({
@@ -113,7 +113,7 @@ export function QuickActionsCard({
                 >
                   {action.icon}
                 </div>
-                <span className="text-xs font-medium text-gray-700">
+                <span className="text-xs font-medium text-foreground/80">
                   {action.label}
                 </span>
               </div>
@@ -124,7 +124,7 @@ export function QuickActionsCard({
                 <Link
                   key={action.id}
                   to={action.href}
-                  className="block hover:bg-gray-50 rounded-lg transition-colors"
+                  className="block hover:bg-muted/40 rounded-lg transition-colors"
                 >
                   {buttonContent}
                 </Link>
@@ -135,7 +135,7 @@ export function QuickActionsCard({
               <button
                 key={action.id}
                 onClick={action.onClick}
-                className="hover:bg-gray-50 rounded-lg transition-colors w-full"
+                className="hover:bg-muted/40 rounded-lg transition-colors w-full"
               >
                 {buttonContent}
               </button>

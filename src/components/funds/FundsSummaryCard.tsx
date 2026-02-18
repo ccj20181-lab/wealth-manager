@@ -6,19 +6,12 @@
 import { useMemo } from 'react';
 import { TrendingUp, TrendingDown, Wallet, PieChart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrency } from '@/components/charts';
 import type { FundReturn } from '@/types/database';
 
 interface FundsSummaryCardProps {
   returns: FundReturn[];
   isLoading?: boolean;
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
-    minimumFractionDigits: 2,
-  }).format(value);
 }
 
 function formatPercentage(value: number): string {

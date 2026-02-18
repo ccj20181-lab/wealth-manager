@@ -1,135 +1,143 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Loader2, CheckCircle, ArrowLeft } from 'lucide-react'
-import { useAuthStore } from '@/stores/authStore'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+/**
+ * ForgotPasswordPage - 忘记密码页面
+ * 发送密码重置邮件
+ */
 
-const forgotPasswordSchema = z.object({
-  email: z.string().email('请输入有效的邮箱地址'),
-})
-
-type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/lib/supabase';
+import { Loader2, Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 export function ForgotPasswordPage() {
-  const [emailSent, setEmailSent] = useState(false)
-  const { resetPassword, isLoading, error, clearError } = useAuthStore()
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    getValues,
-  } = useForm<ForgotPasswordForm>({
-    resolver: zodResolver(forgotPasswordSchema),
-  })
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
-  const onSubmit = async (data: ForgotPasswordForm) => {
-    clearError()
-    const result = await resetPassword(data.email)
-    if (result.success) {
-      setEmailSent(true)
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (resetError) {
+        throw resetError;
+      }
+
+      setIsSuccess(true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '发送失败';
+      setError(message);
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
-  // 翻译常见的 Supabase 错误信息
-  const translateError = (err: string) => {
-    const errorMap: Record<string, string> = {
-      'User not found': '该邮箱未注册',
-      'Too many requests': '请求过于频繁，请稍后再试',
-      'Email rate limit exceeded': '邮件发送频率超限，请稍后再试',
-    }
-    return errorMap[err] || err
-  }
-
-  if (emailSent) {
+  if (isSuccess) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <CardTitle className="text-2xl font-bold">邮件已发送</CardTitle>
-            <CardDescription>
-              我们已向{' '}
-              <span className="font-medium text-foreground">{getValues('email')}</span>{' '}
-              发送了密码重置链接。请查收邮件。
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="flex flex-col gap-4">
-            <Link to="/login" className="w-full">
-              <Button variant="outline" className="w-full">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                返回登录
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="w-full max-w-md">
+          <Card>
+            <CardContent className="pt-6 pb-6 text-center space-y-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-600">
+                <CheckCircle2 className="h-8 w-8" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold">重置邮件已发送</h2>
+                <p className="text-muted-foreground">
+                  请检查 <span className="font-medium text-foreground">{email}</span> 的收件箱
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  点击邮件中的链接即可重置密码
+                </p>
+              </div>
+              <Button variant="outline" onClick={() => setIsSuccess(false)} className="w-full">
+                发送到其他邮箱
               </Button>
-            </Link>
-          </CardFooter>
-        </Card>
+              <Link to="/login">
+                <Button variant="ghost" className="w-full mt-2">
+                  返回登录
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">忘记密码？</CardTitle>
-          <CardDescription>
-            输入您的邮箱地址，我们将向您发送密码重置链接。
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {translateError(error)}
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-md space-y-6">
+        {/* Back to login */}
+        <Link
+          to="/login"
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          返回登录
+        </Link>
+
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-xl">重置密码</CardTitle>
+            <CardDescription>
+              输入您的注册邮箱，我们将发送重置链接
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="email">邮箱</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
               </div>
-            )}
 
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                邮箱
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="请输入邮箱"
-                autoComplete="email"
-                disabled={isLoading}
-                {...register('email')}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  发送中...
-                </>
-              ) : (
-                '发送重置链接'
-              )}
-            </Button>
-
-            <Link to="/login" className="w-full">
-              <Button variant="ghost" className="w-full">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                返回登录
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || !email.trim()}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    发送中...
+                  </>
+                ) : (
+                  '发送重置链接'
+                )}
               </Button>
-            </Link>
-          </CardFooter>
-        </form>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  )
+  );
 }
+
+export default ForgotPasswordPage;

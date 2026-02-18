@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react';
+import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +15,7 @@ import {
   FundTransactionsTable,
   InvestmentPlansCard,
   AddTransactionDialog,
+  AddInvestmentPlanDialog,
 } from '@/components/funds';
 import {
   useFundReturns,
@@ -20,28 +23,38 @@ import {
   useInvestmentPlans,
   useCreateFundTransaction,
   useDeleteFundTransaction,
+  useCreateInvestmentPlan,
   useToggleInvestmentPlan,
   useDeleteInvestmentPlan,
 } from '@/hooks/useFunds';
+import { useAccounts } from '@/hooks';
 import type { FundTransactionInsert } from '@/types/database';
 
 export function FundsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddPlanOpen, setIsAddPlanOpen] = useState(false);
 
   // Data fetching
   const { data: returns, isLoading: isLoadingReturns } = useFundReturns();
   const { data: transactions, isLoading: isLoadingTransactions } = useFundTransactions();
   const { data: plans, isLoading: isLoadingPlans } = useInvestmentPlans();
+  const { data: accounts = [] } = useAccounts({ isActive: true });
 
   // Mutations
   const createTransaction = useCreateFundTransaction();
+  const createPlan = useCreateInvestmentPlan();
   const deleteTransaction = useDeleteFundTransaction();
   const togglePlan = useToggleInvestmentPlan();
   const deletePlan = useDeleteInvestmentPlan();
 
   const handleAddTransaction = async (data: FundTransactionInsert) => {
     await createTransaction.mutateAsync(data);
+    if (location.pathname.endsWith('/funds/transaction')) {
+      navigate('/funds', { replace: true });
+    }
   };
 
   const handleDeleteTransaction = (id: string) => {
@@ -60,12 +73,18 @@ export function FundsPage() {
     }
   };
 
+  useEffect(() => {
+    if (location.pathname.endsWith('/funds/transaction')) {
+      setIsAddDialogOpen(true);
+    }
+  }, [location.pathname]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">基金投资</h1>
+          <h1 className="text-3xl font-bold font-display tracking-tight">基金投资</h1>
           <p className="text-muted-foreground">管理您的基金持仓和交易记录</p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
@@ -131,7 +150,7 @@ export function FundsPage() {
             isLoading={isLoadingPlans}
             onToggle={handleTogglePlan}
             onDelete={handleDeletePlan}
-            onAdd={() => {/* TODO: Open add plan dialog */}}
+            onAdd={() => setIsAddPlanOpen(true)}
             isUpdating={togglePlan.isPending || deletePlan.isPending}
           />
         </TabsContent>
@@ -143,6 +162,17 @@ export function FundsPage() {
         onClose={() => setIsAddDialogOpen(false)}
         onSubmit={handleAddTransaction}
         isSubmitting={createTransaction.isPending}
+      />
+
+      {/* Add Investment Plan Dialog */}
+      <AddInvestmentPlanDialog
+        isOpen={isAddPlanOpen}
+        onClose={() => setIsAddPlanOpen(false)}
+        onSubmit={async (data) => {
+          await createPlan.mutateAsync(data);
+        }}
+        isSubmitting={createPlan.isPending}
+        accounts={accounts}
       />
     </div>
   );

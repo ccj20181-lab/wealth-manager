@@ -54,7 +54,7 @@ export function TransactionCard({
   return (
     <div
       className={cn(
-        'flex items-center justify-between p-4 bg-white rounded-lg border hover:shadow-sm transition-shadow cursor-pointer',
+        'flex items-center justify-between p-4 rounded-xl border bg-card/70 hover:bg-card/90 hover:shadow-sm transition-all cursor-pointer',
         className
       )}
       onClick={onClick}
@@ -64,7 +64,7 @@ export function TransactionCard({
           <Icon className={cn('h-5 w-5', config.color)} />
         </div>
         <div>
-          <p className="font-medium text-gray-900">
+          <p className="font-medium text-foreground">
             {transaction.category?.name || transaction.description || '未分类'}
           </p>
           <p className="text-sm text-muted-foreground">

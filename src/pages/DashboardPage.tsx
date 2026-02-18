@@ -54,7 +54,7 @@ export function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{greeting}</h1>
+          <h1 className="text-3xl font-bold font-display tracking-tight">{greeting}</h1>
           <p className="text-muted-foreground">
             {now.toLocaleDateString('zh-CN', {
               year: 'numeric',

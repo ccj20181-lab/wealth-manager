@@ -15,8 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { FinancialGoal } from '@/types/database';
 
 const goalSchema = z.object({
-  name: z.string().min(1, 'Please enter a goal name'),
-  target_amount: z.number().min(1, 'Target amount must be greater than 0'),
+  name: z.string().min(1, '请输入目标名称'),
+  target_amount: z.number().min(1, '目标金额必须大于 0'),
   current_amount: z.number().min(0).optional(),
   deadline: z.string().optional(),
   category: z.string().optional(),

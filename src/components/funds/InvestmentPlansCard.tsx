@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { Calendar, Pause, Play, Trash2, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/components/charts';
 import type { InvestmentPlan, InvestmentFrequency } from '@/types/database';
 
 interface InvestmentPlansCardProps {
@@ -24,14 +25,6 @@ const frequencyLabels: Record<InvestmentFrequency, string> = {
   biweekly: '每两周',
   monthly: '每月',
 };
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
-    minimumFractionDigits: 2,
-  }).format(value);
-}
 
 export function InvestmentPlansCard({
   plans,

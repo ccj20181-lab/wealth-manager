@@ -3,6 +3,8 @@
  * Unified chart theme and styling
  */
 
+import { formatCNY } from '@/lib/money';
+
 // Asset type colors - harmonious palette
 export const ASSET_COLORS = {
   bank: '#3B82F6',      // Blue - Cash/Bank
@@ -84,10 +86,9 @@ export const TOOLTIP_STYLE = {
 
 // Format currency for charts
 export const formatCurrency = (value: number): string => {
-  if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`;
-  }
-  return `¥${value.toLocaleString()}`;
+  // Keep chart formatting consistent with the rest of the app (zh-CN / CNY).
+  // Use compact unit for readability (万/亿).
+  return formatCNY(value, { compact: true, maximumFractionDigits: 2 });
 };
 
 // Format percentage for charts

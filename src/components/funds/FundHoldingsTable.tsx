@@ -7,6 +7,7 @@ import { useState, useMemo } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/components/charts';
 import type { FundReturn } from '@/types/database';
 
 interface FundHoldingsTableProps {
@@ -16,14 +17,6 @@ interface FundHoldingsTableProps {
 
 type SortField = 'fund_name' | 'current_value' | 'profit_loss' | 'return_rate';
 type SortDirection = 'asc' | 'desc';
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
-    minimumFractionDigits: 2,
-  }).format(value);
-}
 
 function formatPercentage(value: number): string {
   const sign = value >= 0 ? '+' : '';

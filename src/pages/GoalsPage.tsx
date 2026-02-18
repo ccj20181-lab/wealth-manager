@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react';
+import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
 import {
   GoalsList,
@@ -29,6 +31,8 @@ import {
 import type { FinancialGoalInsert, FinancialGoalUpdate, ReminderInsert, GoalProgress } from '@/types/database';
 
 export function GoalsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('goals');
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false);
   const [isAddReminderOpen, setIsAddReminderOpen] = useState(false);
@@ -55,6 +59,9 @@ export function GoalsPage() {
 
   const handleAddGoal = async (data: FinancialGoalInsert) => {
     await createGoal.mutateAsync(data);
+    if (location.pathname.endsWith('/goals/add')) {
+      navigate('/goals', { replace: true });
+    }
   };
 
   const handleEditGoal = async (data: FinancialGoalInsert) => {
@@ -113,11 +120,17 @@ export function GoalsPage() {
     markAllAsRead.isPending ||
     deleteReminder.isPending;
 
+  useEffect(() => {
+    if (location.pathname.endsWith('/goals/add')) {
+      setIsAddGoalOpen(true);
+    }
+  }, [location.pathname]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">投资目标</h1>
+        <h1 className="text-3xl font-bold font-display tracking-tight">投资目标</h1>
         <p className="text-muted-foreground">设定目标，追踪进度，实现财务自由</p>
       </div>
 

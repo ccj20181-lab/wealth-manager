@@ -12,16 +12,18 @@ import { Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { FundTransactionType } from '@/types/database';
+import type { FundTransactionInsert, FundTransactionType } from '@/types/database';
+import { fundsApi } from '@/services/api/funds';
 
 const transactionSchema = z.object({
-  fund_id: z.string().min(1, 'Please select a fund'),
+  fund_code: z.string().min(1, '请输入基金代码'),
+  fund_name: z.string().optional(),
   type: z.enum(['buy', 'sell', 'dividend', 'split'] as const),
-  amount: z.number().min(0.01, 'Amount must be greater than 0'),
+  amount: z.number().min(0.01, '金额必须大于 0'),
   shares: z.number().optional(),
   nav: z.number().optional(),
   fee: z.number().min(0).optional(),
-  transaction_date: z.string().min(1, 'Please select a date'),
+  transaction_date: z.string().min(1, '请选择交易日期'),
   notes: z.string().optional(),
 });
 
@@ -30,7 +32,7 @@ type TransactionFormData = z.infer<typeof transactionSchema>;
 interface AddTransactionDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: TransactionFormData) => Promise<void>;
+  onSubmit: (data: FundTransactionInsert) => Promise<void>;
   isSubmitting?: boolean;
 }
 
@@ -48,6 +50,8 @@ export function AddTransactionDialog({
   isSubmitting,
 }: AddTransactionDialogProps) {
   const [selectedType, setSelectedType] = useState<FundTransactionType>('buy');
+  const [fundInfo, setFundInfo] = useState<{ code: string; name: string } | null>(null);
+  const [fundLookupError, setFundLookupError] = useState<string | null>(null);
 
   const {
     register,
@@ -55,6 +59,7 @@ export function AddTransactionDialog({
     formState: { errors },
     reset,
     setValue,
+    watch,
   } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -65,14 +70,56 @@ export function AddTransactionDialog({
   });
 
   const handleFormSubmit = async (data: TransactionFormData) => {
-    await onSubmit(data);
-    reset();
-    onClose();
+    setFundLookupError(null);
+
+    try {
+      const fund = await fundsApi.ensureFund({
+        code: data.fund_code,
+        name: data.fund_name,
+      });
+
+      await onSubmit({
+        fund_id: fund.id,
+        type: data.type,
+        amount: data.amount,
+        shares: data.shares ?? null,
+        nav: data.nav ?? null,
+        fee: data.fee ?? 0,
+        transaction_date: data.transaction_date,
+        notes: data.notes ?? null,
+      });
+      reset();
+      onClose();
+    } catch (e) {
+      setFundLookupError(e instanceof Error ? e.message : '保存失败');
+    }
   };
 
   const handleTypeChange = (type: FundTransactionType) => {
     setSelectedType(type);
     setValue('type', type);
+  };
+
+  const fundCode = watch('fund_code');
+
+  const lookupFundByCode = async () => {
+    setFundLookupError(null);
+    const code = (fundCode || '').trim();
+    if (!code) return;
+
+    try {
+      const f = await fundsApi.getFundByCode(code);
+      if (!f) {
+        setFundInfo(null);
+        setFundLookupError('未找到该基金：可填写名称后创建');
+        return;
+      }
+      setFundInfo({ code: f.code, name: f.name });
+      setValue('fund_name', f.name);
+    } catch (e) {
+      setFundInfo(null);
+      setFundLookupError(e instanceof Error ? e.message : '基金查询失败');
+    }
   };
 
   if (!isOpen) return null;
@@ -108,18 +155,36 @@ export function AddTransactionDialog({
               </div>
             </div>
 
-            {/* Fund ID - In production, this would be a search/select component */}
+            {/* Fund - Code + Name */}
             <div className="space-y-2">
-              <label htmlFor="fund_id" className="text-sm font-medium">
-                基金代码
+              <label htmlFor="fund_code" className="text-sm font-medium">
+                基金
               </label>
+              <div className="flex gap-2">
+                <Input
+                  id="fund_code"
+                  placeholder="基金代码，如 000001"
+                  {...register('fund_code')}
+                />
+                <Button type="button" variant="outline" onClick={lookupFundByCode}>
+                  查询
+                </Button>
+              </div>
               <Input
-                id="fund_id"
-                placeholder="输入基金代码，如 000001"
-                {...register('fund_id')}
+                id="fund_name"
+                placeholder="基金名称（未收录时用于创建）"
+                {...register('fund_name')}
               />
-              {errors.fund_id && (
-                <p className="text-sm text-destructive">{errors.fund_id.message}</p>
+              {errors.fund_code && (
+                <p className="text-sm text-destructive">{errors.fund_code.message}</p>
+              )}
+              {fundInfo && (
+                <p className="text-xs text-muted-foreground">
+                  已选择：{fundInfo.code} · {fundInfo.name}
+                </p>
+              )}
+              {fundLookupError && (
+                <p className="text-xs text-amber-600">{fundLookupError}</p>
               )}
             </div>
 
@@ -218,17 +283,17 @@ export function AddTransactionDialog({
               <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
                 取消
               </Button>
-              <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    保存中...
-                  </>
-                ) : (
-                  '保存'
-                )}
-              </Button>
-            </div>
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  保存中...
+                </>
+              ) : (
+                '保存'
+              )}
+            </Button>
+          </div>
           </form>
         </CardContent>
       </Card>

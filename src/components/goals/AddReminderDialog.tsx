@@ -14,9 +14,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ReminderType } from '@/types/database';
 
 const reminderSchema = z.object({
-  title: z.string().min(1, 'Please enter a title'),
+  title: z.string().min(1, '请输入提醒标题'),
   description: z.string().optional(),
-  remind_at: z.string().min(1, 'Please select a date and time'),
+  remind_at: z.string().min(1, '请选择提醒时间'),
   type: z.enum(['goal', 'budget', 'investment', 'insurance', 'other'] as const).optional(),
   reference_id: z.string().optional(),
 });

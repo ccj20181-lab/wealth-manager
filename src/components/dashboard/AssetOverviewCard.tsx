@@ -71,7 +71,7 @@ export function AssetOverviewCard({
             <div key={item.key} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className={cn('w-3 h-3 rounded-full', item.colorClass)} />
-                <span className="text-sm text-gray-600">{item.label}</span>
+                <span className="text-sm text-muted-foreground">{item.label}</span>
               </div>
               <div className="text-right">
                 <span className="text-sm font-medium">

@@ -6,6 +6,7 @@
 import { supabase, requireAuth } from '@/lib/supabase';
 import type {
   Fund,
+  FundInsert,
   FundHolding,
   FundTransaction,
   FundTransactionInsert,
@@ -26,6 +27,20 @@ export const fundsApi = {
   // ============================================
   // Funds
   // ============================================
+
+  /**
+   * Create fund (personal usage: allow user-maintained fund list)
+   */
+  async createFund(fund: FundInsert): Promise<Fund> {
+    const { data, error } = await supabase
+      .from('funds')
+      .insert(fund as never)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return data as Fund;
+  },
 
   /**
    * Search funds by code or name
@@ -53,6 +68,28 @@ export const fundsApi = {
 
     if (error && error.code !== 'PGRST116') throw error;
     return data;
+  },
+
+  /**
+   * Ensure a fund exists by code; create when not found.
+   */
+  async ensureFund(params: { code: string; name?: string; type?: FundInsert['type'] | null }): Promise<Fund> {
+    const code = params.code.trim();
+    const existing = await this.getFundByCode(code);
+    if (existing) return existing;
+
+    const name = (params.name ?? '').trim();
+    if (!name) {
+      throw new Error('该基金不存在，请填写基金名称后创建');
+    }
+
+    return this.createFund({
+      code,
+      name,
+      type: params.type ?? null,
+      nav: null,
+      nav_date: null,
+    });
   },
 
   // ============================================
@@ -155,6 +192,19 @@ export const fundsApi = {
       .single();
 
     if (error) throw error;
+
+    // Best-effort: keep latest NAV on funds table for valuation (personal usage).
+    if (transaction.nav != null) {
+      await supabase
+        .from('funds')
+        .update({
+          nav: transaction.nav,
+          nav_date: transaction.transaction_date,
+        } as never)
+        .eq('id', transaction.fund_id)
+        .or(`nav_date.is.null,nav_date.lte.${transaction.transaction_date}`);
+    }
+
     return data as FundTransaction;
   },
 

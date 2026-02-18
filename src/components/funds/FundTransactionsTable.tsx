@@ -9,6 +9,7 @@ import { Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { formatCurrency } from '@/components/charts';
 import type { FundTransaction, FundTransactionType } from '@/types/database';
 
 interface FundTransactionsTableProps {
@@ -31,14 +32,6 @@ const typeColors: Record<FundTransactionType, string> = {
   dividend: 'bg-blue-100 text-blue-800',
   split: 'bg-purple-100 text-purple-800',
 };
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
-    minimumFractionDigits: 2,
-  }).format(value);
-}
 
 export function FundTransactionsTable({
   transactions,
